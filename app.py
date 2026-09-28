@@ -11,37 +11,62 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização em Tons de Rosê e Vinho
+# Estilização Global em Tons Rosê, Vinho e Estilo Elegante
 st.markdown("""
 <style>
-    /* Estilo global da página */
+    /* Fundo da Aplicação */
     .stApp {
         background-color: #FFF9F9;
     }
     
-    /* Títulos e Cabeçalhos */
-    h1, h2, h3 {
-        color: #800020 !important;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Cabeçalho Principal */
+    .main-header {
+        background: linear-gradient(135deg, #800020 0%, #C2185B 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(128, 0, 32, 0.15);
+    }
+    .main-header h1 {
+        color: #FFFFFF !important;
+        margin: 0;
+        font-family: 'Georgia', serif;
+    }
+    .main-header p {
+        color: #F8BBD0;
+        margin-top: 8px;
+        font-size: 1.1rem;
+    }
+    
+    /* Rodapé / Informações de Contato */
+    .info-box {
+        background-color: #FFFFFF;
+        border: 1px solid #F8BBD0;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        color: #4A4A4A;
     }
     
     /* Cartões de Produtos */
     .product-card {
         background-color: #FFFFFF;
         border-radius: 12px;
-        padding: 18px;
+        padding: 20px;
         box-shadow: 0 4px 12px rgba(128, 0, 32, 0.08);
-        border-left: 5px solid #C2185B;
+        border-left: 6px solid #800020;
         margin-bottom: 20px;
     }
     
-    /* Botões WhatsApp */
+    /* Botão WhatsApp */
     .btn-whatsapp {
         display: inline-block;
         background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
         color: white !important;
         font-weight: bold;
-        padding: 10px 20px;
+        padding: 10px 22px;
         border-radius: 25px;
         text-decoration: none;
         box-shadow: 0 3px 6px rgba(0,0,0,0.15);
@@ -51,7 +76,7 @@ st.markdown("""
         transform: scale(1.03);
     }
     
-    /* Botões do Streamlit */
+    /* Botões Gerais */
     .stButton>button {
         background-color: #800020;
         color: white;
@@ -78,7 +103,7 @@ def init_supabase():
 
 supabase = init_supabase()
 
-# Lista de Produtos Padrão na Sessão
+# Lista de Produtos na Sessão
 if "produtos" not in st.session_state:
     st.session_state.produtos = [
         {
@@ -137,9 +162,8 @@ if "produtos" not in st.session_state:
         }
     ]
 
-# Função para Salvar a Foto (Com Supabase e Fallback de Segurança)
+# Função de Envio de Fotos
 def salvar_foto(file_obj):
-    # Tentativa 1: Enviar para o Supabase Storage
     if supabase:
         try:
             file_ext = file_obj.name.split(".")[-1]
@@ -153,36 +177,58 @@ def salvar_foto(file_obj):
             )
             return supabase.storage.from_("fotos-produtos").get_public_url(file_name)
         except Exception:
-            pass # Se houver bloqueio de RLS no Supabase, utiliza o modo seguro abaixo
+            pass
             
-    # Fallback seguro: Armazenamento em Base64 (Nunca falha)
+    # Fallback seguro
     file_bytes = file_obj.read()
     base64_encoded = base64.b64encode(file_bytes).decode('utf-8')
     return f"data:{file_obj.type};base64,{base64_encoded}"
 
-# Menu Lateral
-st.sidebar.markdown("## 🧵 Ateliê Mimos & Artes")
-st.sidebar.caption("Três Lagoas - MS")
-modo = st.sidebar.radio("Navegação:", ["🛍️ Catálogo do Cliente", "⚙️ Painel da Artesã (Restrito)"])
+# --- NAVEGAÇÃO LATERAL E SUPERIOR ---
+st.sidebar.markdown("## 🧵 Navegação")
+modo_sidebar = st.sidebar.radio("Ir para:", ["🛍️ Catálogo de Produtos", "⚙️ Painel de Gestão (Restrito)"], key="nav_sidebar")
+
+# Informações no Menu Lateral
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📍 Informações do Ateliê")
+st.sidebar.write("📍 **Localização:** Três Lagoas - MS")
+st.sidebar.write("📸 **Instagram:** [@ateliemimoseartes](#)")
+st.sidebar.write("📱 **WhatsApp:** (67) 99999-9999")
+
+modo = modo_sidebar
 
 # ==========================================
 # MODO 1: CATÁLOGO DO CLIENTE
 # ==========================================
-if modo == "🛍️ Catálogo do Cliente":
-    st.title("🌸 Ateliê Mimos & Artes da Sil")
-    st.write("Seja bem-vindo(a) ao nosso catálogo virtual! Escolha suas peças artesanais feitas com amor e carinho.")
-    st.divider()
+if modo == "🛍️ Catálogo de Produtos":
+    # Banner de Cabeçalho
+    st.markdown("""
+    <div class="main-header">
+        <h1>🌸 Ateliê Mimos & Artes da Sil</h1>
+        <p>Peças artesanais exclusivas feitas com amor, carinho e devoção</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Bloco de Informações de Contato e Endereço
+    col_info1, col_info2, col_info3 = st.columns(3)
+    with col_info1:
+        st.markdown("<div class='info-box'>📍 <b>Endereço:</b><br>Três Lagoas - MS</div>", unsafe_allow_html=True)
+    with col_info2:
+        st.markdown("<div class='info-box'>📸 <b>Redes Sociais:</b><br>Instagram: @ateliemimoseartes</div>", unsafe_allow_html=True)
+    with col_info3:
+        st.markdown("<div class='info-box'>💬 <b>Atendimento:</b><br>Segunda a Sábado via WhatsApp</div>", unsafe_allow_html=True)
 
-    # Filtros de Busca
+    # Área de Pesquisa e Filtros
+    st.markdown("### 🔍 Encontre o produto ideal")
     col_b, col_c, col_t = st.columns([2, 1, 1])
     with col_b:
-        busca = st.text_input("🔍 Buscar por nome do produto:", placeholder="Digite aqui...")
+        busca = st.text_input("Buscar por nome do produto:", placeholder="Ex: Bolsa, Naninha, Santos...")
     with col_c:
         cat_f = st.selectbox("Categoria:", ["Todas", "Bolsas", "Naninhas", "Bonecas de Pano", "Amigurumi"])
     with col_t:
         tema_f = st.selectbox("Tema:", ["Todos", "Religioso (Santos de Devoção)", "Tendências e Super-Heróis", "Safari", "Princesas", "Diversos"])
 
-    # Filtragem
+    # Filtragem dos produtos
     prods = st.session_state.produtos
     if busca:
         prods = [p for p in prods if busca.lower() in p["nome"].lower() or busca.lower() in p["descricao"].lower()]
@@ -191,11 +237,12 @@ if modo == "🛍️ Catálogo do Cliente":
     if tema_f != "Todos":
         prods = [p for p in prods if p["tema"] == tema_f]
 
-    st.write(f"Mostrando **{len(prods)}** item(ns):")
+    st.write(f"Mostrando **{len(prods)}** produto(s) encontrado(s):")
     st.divider()
 
+    # Listagem dos Produtos
     if not prods:
-        st.info("Nenhuma peça encontrada com estes filtros.")
+        st.warning("Nenhum produto encontrado para os filtros selecionados.")
     else:
         for p in prods:
             st.markdown('<div class="product-card">', unsafe_allow_html=True)
@@ -219,12 +266,12 @@ if modo == "🛍️ Catálogo do Cliente":
                 st.write(p["descricao"])
                 
                 if len(p["imagens"]) > 1:
-                    with st.expander("📷 Galeria com mais fotos"):
+                    with st.expander("📷 Ver mais fotos deste produto"):
                         g_cols = st.columns(min(len(p["imagens"]) - 1, 4))
                         for idx, img_u in enumerate(p["imagens"][1:]):
                             g_cols[idx % 4].image(img_u, use_container_width=True)
                 
-                msg_wa = f"Olá Sil! Gostei muito do produto '{p['nome']}' e gostaria de pedir informações!"
+                msg_wa = f"Olá Sil! Gostei do produto '{p['nome']}' e gostaria de pedir informações!"
                 link_wa = f"https://wa.me/5567999999999?text={msg_wa.replace(' ', '%20')}"
                 st.markdown(f'<a href="{link_wa}" target="_blank" class="btn-whatsapp">💬 Encomendar pelo WhatsApp</a>', unsafe_allow_html=True)
             
@@ -235,9 +282,9 @@ if modo == "🛍️ Catálogo do Cliente":
 # ==========================================
 else:
     st.title("⚙️ Painel de Gestão da Artesã")
-    st.caption("Gerencie seus produtos e fotos de forma simples e rápida.")
+    st.caption("Área restrita para edição e cadastro de peças.")
     
-    senha = st.text_input("🔐 Digite a senha de acesso:", type="password")
+    senha = st.text_input("🔐 Digite a senha para acessar:", type="password")
     
     if senha == "sil123":
         st.success("Acesso liberado!")
@@ -261,7 +308,7 @@ else:
             fotos = p_obj.get("imagens", [])
             
             if not fotos:
-                st.info("Este produto ainda não tem fotos cadastradas.")
+                st.info("Este produto ainda não possui fotos salvas.")
             else:
                 f_cols = st.columns(min(len(fotos), 4))
                 for idx, f_url in enumerate(fotos):
@@ -282,9 +329,9 @@ else:
                 n_status = st.selectbox("Status:", ["Pronta Entrega", "Sob Encomenda"], index=["Pronta Entrega", "Sob Encomenda"].index(p_obj["status"]))
                 n_desc = st.text_area("Descrição:", value=p_obj["descricao"])
                 
-                st.markdown("➕ **Adicionar Novas Fotos Reais:**")
+                st.markdown("➕ **Adicionar Fotos ao Produto:**")
                 novas_fotos = st.file_uploader(
-                    "Selecione as fotos do seu dispositivo", 
+                    "Selecione as fotos do seu celular ou computador", 
                     type=["png", "jpg", "jpeg"], 
                     accept_multiple_files=True,
                     key=f"uploader_{st.session_state.up_key}"
@@ -298,7 +345,7 @@ else:
                     p_obj["descricao"] = n_desc
                     
                     if novas_fotos:
-                        with st.spinner("Processando e salvando fotos..."):
+                        with st.spinner("Enviando fotos..."):
                             for arq in novas_fotos:
                                 url_salva = salvar_foto(arq)
                                 if url_salva:
@@ -320,7 +367,7 @@ else:
                 
                 if st.form_submit_button("✨ Cadastrar Produto"):
                     if not c_nome:
-                        st.error("Por favor, digite o nome do produto.")
+                        st.error("Por favor, informe o nome da peça.")
                     else:
                         urls = []
                         if c_fotos:
@@ -340,7 +387,7 @@ else:
                             "descricao": c_desc,
                             "imagens": urls
                         })
-                        st.success(f"✅ Produto '{c_nome}' cadastrado com sucesso!")
+                        st.success(f"✅ Peça '{c_nome}' cadastrada com sucesso!")
                         st.rerun()
 
     elif senha != "":
