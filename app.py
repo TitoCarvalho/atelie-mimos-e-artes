@@ -341,11 +341,24 @@ else:
         
         # Selecionar produto para editar
         opcoes_produtos = {p["nome"]: p for p in st.session_state.produtos}
-        prod_selecionado_nome = st.selectbox("Escolha qual produto deseja alterar:", list(opcoes_produtos.keys()))
+        
+        # Callback ao mudar de produto para resetar o campo de upload
+        def ao_mudar_produto():
+            st.session_state.uploader_key = st.session_state.get("uploader_key", 0) + 1
+
+        prod_selecionado_nome = st.selectbox(
+            "Escolha qual produto deseja alterar:", 
+            list(opcoes_produtos.keys()),
+            on_change=ao_mudar_produto
+        )
         prod_obj = opcoes_produtos[prod_selecionado_nome]
 
+        # Garantir inicialização da chave do uploader na sessão
+        if "uploader_key" not in st.session_state:
+            st.session_state.uploader_key = 0
+
         # -------------------------------------------------------------
-        # SEÇÃO NOVA: GERENCIADOR E REMOÇÃO DE FOTOS INDIVIDUAIS
+        # SEÇÃO: GERENCIADOR E REMOÇÃO DE FOTOS INDIVIDUAIS
         # -------------------------------------------------------------
         st.markdown("### 🖼️ Gerenciar Fotos Atuais")
         fotos_atuais = prod_obj.get("imagens", [])
@@ -355,12 +368,11 @@ else:
         else:
             st.write(f"O produto possui **{len(fotos_atuais)} foto(s)**. Clique em 'Excluir' para remover uma foto específica:")
             
-            # Exibe as fotos em colunas para facilitar a visualização e remoção
+            # Exibe as fotos em colunas para facilidade de visualização e remoção
             cols_fotos = st.columns(min(len(fotos_atuais), 4))
             for f_idx, foto_url in enumerate(fotos_atuais):
                 with cols_fotos[f_idx % 4]:
                     st.image(foto_url, use_container_width=True)
-                    # Botão individual para deletar a foto selecionada
                     if st.button(f"🗑️ Excluir Foto {f_idx + 1}", key=f"del_{prod_obj['id']}_{f_idx}"):
                         prod_obj["imagens"].pop(f_idx)
                         st.toast(f"Foto {f_idx + 1} removida com sucesso!", icon="✅")
@@ -381,7 +393,14 @@ else:
             
             st.markdown("---")
             st.markdown("➕ **Adicionar Mais Fotos Reais ao Produto:**")
-            novas_fotos_upload = st.file_uploader("Selecione novas fotos do seu dispositivo", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+            
+            # Campo de upload com chave dinâmica que reseta o input ao salvar ou trocar de produto
+            novas_fotos_upload = st.file_uploader(
+                "Selecione novas fotos do seu dispositivo", 
+                type=["png", "jpg", "jpeg"], 
+                accept_multiple_files=True,
+                key=f"uploader_{st.session_state.uploader_key}"
+            )
             
             btn_salvar = st.form_submit_button("💾 Salvar Alterações")
             
@@ -392,7 +411,7 @@ else:
                 prod_obj["status"] = novo_status
                 prod_obj["descricao"] = nova_descricao
                 
-                # Anexa as novas fotos enviadas mantendo as anteriores
+                # Processa e anexa as fotos enviadas
                 if novas_fotos_upload:
                     import base64
                     for arq in novas_fotos_upload:
@@ -400,6 +419,9 @@ else:
                         base64_image = base64.b64encode(bytes_data).decode('utf-8')
                         src_image = f"data:{arq.type};base64,{base64_image}"
                         prod_obj["imagens"].append(src_image)
+                
+                # Incrementa a chave para limpar o componente de upload na próxima atualização da tela
+                st.session_state.uploader_key += 1
                 
                 st.success(f"✅ O produto '{novo_nome}' foi atualizado com sucesso!")
                 st.rerun()
