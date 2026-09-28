@@ -39,7 +39,7 @@ def salvar_foto_nuvem(file_obj):
             )
             # Retorna a URL pública gerada
             return supabase.storage.from_("fotos-produtos").get_public_url(file_name)
-        except Exception as e:
+        except Exception:
             pass
             
     # Fallback seguro caso a conexão falhe
@@ -147,6 +147,10 @@ WHATSAPP_NUM = "5515981269458"
 ENDERECO = "Rua Romeu de Campos, 1029 - Bairro Vila Nova - Três Lagoas - MS, CEP: 79604-100"
 LINK_FB = "https://www.facebook.com/1731249910444261?ref=NONE_xav_ig_profile_page_web"
 LINK_IG = "https://www.instagram.com/mimoseartesdasil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
+
+# Inicializa versão do uploader para resetar a caixa ao salvar
+if "uploader_version" not in st.session_state:
+    st.session_state.uploader_version = 0
 
 # 5. Inicialização dos Produtos na Sessão
 if "produtos" not in st.session_state:
@@ -417,7 +421,10 @@ else:
             
             st.markdown("---")
             st.markdown("➕ **Adicionar Mais Fotos Reais (Salvas na Nuvem):**")
-            novas_fotos_upload = st.file_uploader("Selecione novas fotos do seu dispositivo", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+            
+            # Key dinâmica para resetar o uploader ao trocar de produto ou salvar
+            uploader_key = f"upload_{prod_obj['id']}_{st.session_state.uploader_version}"
+            novas_fotos_upload = st.file_uploader("Selecione novas fotos do seu dispositivo", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=uploader_key)
             
             btn_salvar = st.form_submit_button("💾 Salvar Alterações")
             
@@ -434,6 +441,9 @@ else:
                         for arq in novas_fotos_upload:
                             url_foto = salvar_foto_nuvem(arq)
                             prod_obj["imagens"].append(url_foto)
+                
+                # Incrementa o contador para limpar a lista de arquivos selecionados
+                st.session_state.uploader_version += 1
                 
                 st.success(f"✅ O produto '{novo_nome}' foi atualizado com sucesso!")
                 st.rerun()
